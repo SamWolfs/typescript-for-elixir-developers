@@ -1,0 +1,58 @@
+#+TITLE: Typescript For Elixir Developers
+
+* JavaScript Fundamentals in TypeScript
+** Variable Declaration
+Variables are written in camelCase and can contain numbers.
+
+*** let
+~let~ is used for declaration of reassignable variables.
+#+begin_src typescript
+let greeting = "Hello";
+greeting = "Hello World!";
+console.log(greeting);
+#+end_src
+
+*** const
+It's also possible to declare constants through ~const~.
+#+begin_src typescript
+const greeting = "Hello";
+greeting = "Hello World";
+#+end_src
+
+Although we can still modify the object.
+#+begin_src typescript
+const greetings = ["Hello", "Hi"];
+greetings.push("Hej")
+console.log(greetings)
+#+end_src
+
+*** var
+~var~ does not respect variable scoping, so we don't like ~var~.
+#+begin_src typescript
+if (true) {
+    var greeting = "Hello World";
+}
+console.log(greeting);
+#+end_src
+
+** Function Declaration
+JavaScript supports first-class functions. This makes it possible to declare functions in two different ways:
+#+begin_src typescript
+function greet(name: string): string{
+    return `Hello ${name}`;
+}
+const yell = (text: string) => {
+    return `${text.toUpperCase()}!`;
+}
+console.log(yell(greet("moto")));
+#+end_src
+
+** Modules
+
+- Primitive and compound types
+- First class functions/higher order functions
+- Union/Intersect Types
+- Type assertions/Conditionals/Narrowing
+- Spread operator and pattern matching
+- Async/Await
+- Maybe optional chaining?
