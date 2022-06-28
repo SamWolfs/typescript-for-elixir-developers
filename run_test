@@ -1,0 +1,3 @@
+#!/bin/bash
+docker build -t typescript_for_elixir .
+docker run typescript_for_elixir npm run test

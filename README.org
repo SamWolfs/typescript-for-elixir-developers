@@ -1,36 +1,79 @@
 #+TITLE: Typescript For Elixir Developers
 
+* Installation
+To execute JavaScript code we require a JavaScript runtime; the most popular JavaScript runtime is [[https://nodejs.org/en/][Node.js]], although [[https://deno.land/][Deno]] has been gaining in popularity as a more secure alternative with native Typescript interoperability. Both runtimes use Chrome's V8 engine. We'll be using Node.js as it's the most mature platform.
+
+** Node.js
+The easiest way to install node is through a version manager, e.g. [[https://asdf-vm.com/][asdf]] or [[https://github.com/coreybutler/nvm-windows][NVM]].
+
+*** asdf (Linux)
+- Follow the [[https://asdf-vm.com/guide/getting-started.html#_3-install-asdf][asdf installation steps]]
+- Install the [[https://github.com/asdf-vm/asdf-nodejs/][asdf node plugin]].
+#+begin_src eshell
+asdf plugin add nodejs https://github.com/asdf-vm/asdf-nodejs.git
+#+end_src
+- Install the [[https://nodejs.org/en/download/][latest LTS version]].
+#+begin_src eshell
+asdf install nodejs lts
+asdf global nodejs lts
+#+end_src
+
+*** NVM (Node Version Manager) for Windows
+- Follow the [[https://github.com/coreybutler/nvm-windows][NVM for Windows installation steps]].
+
+** Playgrounds
+- [[https://www.typescriptlang.org/play][TypeScript Playground]]
+- [[https://replit.com][Repl.it]]
+
+** Running the Project (Docker)
+#+begin_src shell
+docker build -t typescript_for_elixir .
+// run unit tests
+docker run typescript_for_elixir npm run test
+// run app
+docker run -p 8000:8000 typescript_for_elixir
+#+end_src
+
 * JavaScript Fundamentals in TypeScript
 ** Variable Declaration
-Variables are written in camelCase and can contain numbers.
+Variables are written in camelCase and may contain numbers.
 
 *** let
-~let~ is used for declaration of reassignable variables.
+~let~ is used for declaration of re-assignable variables.
 #+begin_src typescript
-let greeting = "Hello";
-greeting = "Hello World!";
+let greeting = 'Hello';
+greeting = 'Hello World!';
 console.log(greeting);
 #+end_src
 
 *** const
 It's also possible to declare constants through ~const~.
 #+begin_src typescript
-const greeting = "Hello";
-greeting = "Hello World";
+const greeting = 'Hello';
+greeting = 'Hello World';
 #+end_src
 
-Although we can still modify the object.
+Although we can still modify objects and arrays.
 #+begin_src typescript
-const greetings = ["Hello", "Hi"];
-greetings.push("Hej")
-console.log(greetings)
+const greetings = ['Hello', 'Hi'];
+greetings.push('Hej');
+console.log(greetings);
+#+end_src
+
+TypeScript provides the ~Readonly<T>~ wrapper to guard against the modification of constants.
+#+begin_src typescript
+const greetings: Readonly<string[]> = ['Hello', 'Hi'];
+greetings.push('Hej'); // error
+
+const colors = { red: '#ff0000', green: '#00f0f0' } as const;
+colors.green = '#00ff00'; // error
 #+end_src
 
 *** var
 ~var~ does not respect variable scoping, so we don't like ~var~.
 #+begin_src typescript
 if (true) {
-    var greeting = "Hello World";
+    var greeting = 'Hello World';
 }
 console.log(greeting);
 #+end_src
@@ -47,12 +90,498 @@ const yell = (text: string) => {
 console.log(yell(greet("moto")));
 #+end_src
 
-** Modules
+The ~yell~ function is an example of an anonymous function. ~() => {}~
+When an anonymous function returns its first (and only) statement, we can leave out the curly braces ~{}~.
+#+begin_src typescript
+const yell = (text: string) => `${text.toUpperCase()}!`;
+console.log(yell('hej'));
+#+end_src
 
-- Primitive and compound types
-- First class functions/higher order functions
-- Union/Intersect Types
-- Type assertions/Conditionals/Narrowing
-- Spread operator and pattern matching
-- Async/Await
-- Maybe optional chaining?
+** Modules
+Any file containing an ~export~ (or top-level ~await~) is considered a module.
+#+begin_src typescript
+// @filename: my_module.ts
+export const pi = 3.1415;
+export class Person {}
+export function helloWorld() {
+    console.log('Hello World!');
+}
+
+// @filename: index.ts
+import {pi, Person, helloWorld} from './my_module';
+console.log(pi);
+helloWorld();
+#+end_src
+
+~export default~ can be used to define a main export.
+#+begin_src typescript
+// @filename: my_module.ts
+export default MyModule = {
+    pi: 3.1415,
+    helloWorld: () => console.log('Hello World!'),
+}
+
+// @filename: index.ts
+import WhateverAliasIWant from './my_module';
+WhateverAliasIWant.helloWorld();
+#+end_src
+
+** Dependency Management
+You can browse [[https://www.npmjs.com/][npm]] for external packages and their documentation.
+
+Packages can be installed by running the ~npm install~ command; optionally using the ~--save-dev/-D~ flag, which marks the dependency as a development dependency, so it won't be added to the production build.
+e.g. Install TypeScript: ~npm install --save-dev typescript~ or ~npm i -D typescript~.
+
+*** package.json
+The ~package.json~ file contains all the project metadata, including dependencies and scripts and is similar to ~mix.exs~ in Elixir.
+
+Scripts can be added under the ~scripts~ property and can be ran through ~npm run <script-name>~.
+
+For additional configuration options check [[https://docs.npmjs.com/cli/v8/configuring-npm/package-json][the documentation]].
+
+** Conditionals
+*** if...else
+#+begin_src typescript
+if (7 > 5) {
+    console.log('Will print!');
+} else {
+    console.log('Won\'t print!');
+}
+#+end_src
+
+*** switch
+#+begin_src typescript
+let x: string = 'greeting';
+switch(x) {
+    case 'greeting': console.log('Selamat pagi'); break;
+    case 'goodbye': console.log('Selamat tinggal'); break;
+    default: console.log(':thinking_face:'); break;
+}
+#+end_src
+
+** Looping
+JavaScript provides many ways to loop over iterables (~Array~, ~Map~, ~Set~,...) using [[https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Loops_and_iteration][different looping statements]]. Although it's often preferred to use the functional alternatives:
+#+begin_src typescript
+const characters = [
+    { firstName: 'BoJack', lastName: 'Horseman', age: 57 },
+    { firstName: 'Todd', lastName: 'Chavez', age: 30 },
+    { firstName: 'Diane', lastName: 'Nguyen', age: 41 },
+    { firstName: 'Princess', lastName: 'Carolyn', age: 47 },
+    { firstName: 'Mr.', lastName: 'Peanutbutter', age: 52 },
+];
+
+const fullNames = characters.map(character => `${character.firstName} ${character.lastName}`);
+console.log('Character\'s full names:', fullNames);
+
+const over50 = characters.filter(({ age }) => age > 50);
+console.log('Characters over 50:', over50);
+
+const totalAge = characters.reduce((acc, character) => {
+    acc += character.age;
+    return acc;
+}, 0);
+console.log('Total age:', totalAge);
+
+const pretty = characters.reduce((acc, character) => {
+    acc += Object
+        .entries(character)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(', ') + '\n';
+    return acc;
+}, '');
+console.log('Pretty printed (sort of):', pretty);
+#+end_src
+
+*** Object utils
+The ~Object~ built-in also has some functions to turn objects into iterables:
+
+- ~Object.entries()~: Returns an array of the object's key-value pairs as tuples (~[[key1, value1], [key2, value2], ...]~)
+- ~Object.values()~: Returns an array of the object's values.
+- ~Object.keys()~: Returns an array of the object's keys.
+
+** Spread Operator
+The spread operator ~...~ has several useful applications.
+
+- When used in a *function definition*, the /spread operator/ collects a list of arguments into an array.
+#+begin_src typescript
+const sum = (...args: number[]) => args.reduce((acc, value) => acc + value);
+console.log(sum(1, 2));
+console.log(sum(1, 2, 3, 4, 5));
+#+end_src
+
+- When used in a *function call*, the /spread operator/ expands an array into a list of arguments.
+#+begin_src typescript
+function add(x: number, y: number) {
+    return x + y;
+}
+const args: [number, number] = [1300, 37];
+console.log(add(...args));
+#+end_src
+
+- When considering ~[]~ to be an array constructor, we can apply the same logic to concatenate arrays.
+#+begin_src typescript
+const arr1 = [1, 2, 3],
+      arr2 = [4, 5, 6];
+console.log([...arr1, ...arr2]);
+#+end_src
+
+- It's also possible to perform *shallow cloning* on objects.
+#+begin_src typescript
+const coordinates = {x: 55.6633067, y: 12.3936166};
+const clonedCoordinates = {...coordinates};
+console.log(clondCoordinates);
+#+end_src
+
+- When the same key is passed multiple times, the last occurrence takes precedence.
+#+begin_src typescript
+const coordinates = {x: 55.6633067, y: 12.3936166};
+const newCoordinates = {...coordinates, y: 3.1415};
+console.log(newCoordinates);
+#+end_src
+
+** Pattern Matching
+JavaScript's destructuring assignment provides a way to unpack variables from objects or iterables.
+
+*** Arrays
+- When destructuring arrays, the assigned variables (left-hand side) can have a different length from the value.
+#+begin_src typescript
+const values = [1, 2, 3, 4, 5];
+
+const [one, two] = values;
+console.log(one, two);
+#+end_src
+
+- Variables without a matching value will default to 'undefined'.
+#+begin_src typescript
+const [red, green, blue, yellow] = ['#ff0000', '#00ff00', '#0000ff'];
+console.log(red, green, blue, yellow);
+#+end_src
+
+- It's possible to assign default values.
+#+begin_src typescript
+const [x, y, z=0] = [55.6633067, 12.3936166];
+console.log(x, y, z);
+#+end_src
+
+- We can use the spread operator when destructuring arrays. (The spread operator always has to be used as the final element in the pattern)
+#+begin_src typescript
+const [hd, ...tail] = [1, 2, 3, 4, 5];
+console.log('head:', hd);
+console.log('tail:', tail);
+#+end_src
+
+*** Objects
+
+- Objects can also be destructured, but require matching key names.
+#+begin_src typescript
+const coordinates = {x: 55.6633067, y: 12.3936166};
+const {x, y} = coordinates;
+console.log(x, y);
+#+end_src
+
+- Variables without a matching value will default to 'undefined'.
+#+begin_src typescript
+const colors: any = {
+    red: '#ff0000',
+    green: '#00ff00',
+    blue: '#0000ff',
+};
+const {red, yellow} = colors;
+console.log(red, yellow);
+#+end_src
+
+- It's possible to assign default values.
+#+begin_src typescript
+const { firstName, lastName = 'Johnson' } = { firstName: 'John' };
+console.log(firstName, lastName);
+#+end_src
+
+- Additionally, it's possible to reassign variable names.
+#+begin_src typescript
+const { firstName: f, lastName: l = 'Johnson' } = { firstName: 'John' };
+console.log(f, l);
+#+end_src
+
+- We can combine the spread operator when destructuring objects. (The spread operator always has to be used as the final element in the pattern)
+#+begin_src typescript
+const coordinates = {x: 55.6633067, y: 12.3936166, z: 42};
+const {z, ...twoDimensional} = coordinates;
+console.log(twoDimensional);
+#+end_src
+
+*** Functions
+All of the above can be combined and can also be applied to function definitions.
+
+#+begin_src typescript
+const doItAll = ({
+    coordinates: {z, ...twoDimensional},
+    firstName: fName,
+    lastName = 'Johnson',
+    colors: [firstColor, ...otherColors]
+}: any) => {
+    console.log('Two dimensional coordinates:', twoDimensional);
+    console.log('Full name:', fName, lastName);
+    console.log(firstColor, otherColors)
+}
+
+const myObject = {
+    coordinates: {x: 55.6633067, y: 12.3936166, z: 42},
+    firstName: 'John',
+    colors: ['red', 'green', 'blue']
+}
+
+doItAll(myObject);
+#+end_src
+
+** Promises
+A promise represents the eventual completion or failure of an asynchronous operation. In every day use, you're unlikely to be creating promises yourself; instead you may encounter them as e.g. the return value from a ~fetch API~ call or a database operation.
+
+Traditionally, promises were handled using callbacks, which almost always led to the creation of *callback hell*. And while ~then~ chaining did help in cleaning up the callback depth, readability still left something to be desired. Nowadays, the preferred way of handling promises is by using the ~async/await~ syntactic sugar. Resulting in code that looks *almost* the same as synchronous code!
+
+#+begin_src typescript
+// @filename: classic_promise.ts
+console.log('Before');
+new Promise((resolve, _reject) => {
+    setTimeout(() => resolve('Finished'), 1000);
+}).then(data => console.log(data));
+console.log('After');
+#+end_src
+
+To ~await~ a promise, we require an ~async~ function; this is because ~async~ functions actually wrap the return value in a ~Promise.resolve()~.
+
+#+begin_src typescript
+async function f() {
+    return 1;
+}
+
+function g() {
+    return Promise.resolve(1);
+}
+
+(async () => console.log(await f()))();
+#+end_src
+
+Once execution on a promise has started we can later choose to ~await~ the result, either /unwrapping/ the result right away or waiting until execution has finished, before unwrapping.
+
+#+begin_src typescript
+// @filename: async_await.ts
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const executionTimeAsync = async (fn: () => Promise<any>) => {
+    const start = Date.now();
+    await fn();
+    console.log(Date.now() - start);
+}
+const logAfter = async (ms: number, msg: string) => {
+    await wait(ms);
+    console.log(msg);
+}
+
+// Both statements will be executed sequentially, taking a total
+// of 3 seconds to finish execution.
+const doSequential = async () => {
+    await logAfter(2000, '[First] After 2 seconds.');
+    await logAfter(1000, '[Second] After 1 second.');
+}
+
+// Both statements start execution at roughly the same time, so
+// Second will finished execution first since it only lasts 1 second
+// even though we end up awaiting the First promise before the Second one.
+const doConcurrent = async () => {
+    const first = logAfter(2000, '[First] After 2 seconds.');
+    const second = logAfter(1000, '[Second] After 1 second.');
+
+    // Do some other work...
+
+    await first;
+    await second;
+}
+
+// executionTimeAsync(doSequential);
+executionTimeAsync(doConcurrent);
+#+end_src
+
+Note the similarities to Elixir's [[https://hexdocs.pm/elixir/1.13/Task.html][Task]].
+
+* TypeScript Fundamentals
+** Primitive Types
+TypeScript will always be able to infer the correct typing when directly assigning to a variable, so it's not necessary to annotate them. (most linters will even discourage you from this to improve readability)
+#+begin_src typescript
+const decimal: number = 3.1415;
+const isTrue: boolean = true;
+const message: string = 'Hello MOTO!';
+const nil: null = null;
+const obj: object = {};
+#+end_src
+
+** Other Types
+#+begin_src typescript
+const numbers: number[] = [1, 2, 3, 4];
+const tuple: [number, string] = [1, 'one'];
+const greet: (name: string) => string = name => `Hello ${name}!`;
+#+end_src
+
+Note that function annotations also include parameter names.
+
+** Structural Types
+Structural types can be defined in-line.
+#+begin_src typescript
+let coordinates: {x: number, y: number} = { x: 55.6633067, y: 12.3936166 };
+console.log(coordinates);
+#+end_src
+
+Alternatively we can define re-usable ~type aliases~ or ~interfaces~.
+#+begin_src typescript
+type CoordinatesType = {x: number, y: number};
+interface CoordinatesInterface {
+    x: number;
+    y: number;
+}
+const coordinatesA: CoordinatesType = { x: 1, y: 1 };
+const coordinatesB: CoordinatesInterface = { x: 0, y: 0 };
+console.log(coordinatesA, coordinatesB);
+#+end_src
+
+The main difference between the type alias and interface is that interfaces can be implemented by a class.
+
+It's always possible to assign a structure with a higher specificity to a variable that was declared with a lower specificity.
+
+#+begin_src typescript
+let coordinates: {x: number, y: number} = { x: 55.6633067, y: 12.3936166 };
+const onlyX: {x: number} = coordinates;
+console.log(onlyX);
+
+const onlyY = {y: 0};
+coordinates = onlyY; // error
+#+end_src
+
+** Unions
+Sometimes we want a single function to operate on several different data types. Unlike Elixir, it's not possible to create a function definition for each different function-arity or based on the values passed. Instead, we discriminate between different datatypes within a single function.
+#+begin_src typescript
+function greet(arg: string | string[] | (() => string)): void {
+    const performGreeting = (greetee: string) => console.log(`Hello ${greetee}`);
+    if (typeof arg === 'string') {
+        performGreeting(arg);
+    } else if (Array.isArray(arg)) {
+        arg.map(performGreeting);
+    } else if (typeof arg === 'function') {
+        performGreeting(arg());
+    } else {
+    console.log('Unexpected argument!')
+    }
+}
+
+console.log('string:');
+greet('you');
+console.log('array:');
+greet(['you', 'everyone']);
+console.log('function:');
+greet(() => 'fellow kids');
+#+end_src
+
+** Intersections
+It's also possible to combine types.
+#+begin_src typescript
+type Person = { firstName: string, lastName: string };
+interface Employable { employeeId: string };
+
+const me: Person & Employable = { firstName: 'Sam', lastName: 'Wolfs', employeeId: 'KQCB73' };
+console.log(me);
+#+end_src
+
+** Type Narrowing
+*** Discriminated Unions
+While JavaScript comes with several ways of asserting a primitive value's type, this is not the case when dealing with object types. There are 2 common ways of dealing with more complex datatypes.
+
+- Tagging datatypes
+#+begin_src typescript
+type Shape =
+  | { kind: 'circle'; radius: number }
+  | { kind: 'square'; x: number }
+  | { kind: 'triangle'; x: number; y: number };
+
+function area(s: Shape) {
+  if (s.kind === 'circle') {
+    return Math.PI * s.radius * s.radius;
+  } else if (s.kind === 'square') {
+    return s.x * s.x;
+  } else {
+    return (s.x * s.y) / 2;
+  }
+}
+console.log(area({kind: 'circle', radius: 2}));
+#+end_src
+
+The ~kind~ tag uses TypeScript's ~Unit Types~ to discriminate between the various types of the ~Shape~ union. Unit types may look like strings, but they strictly refer to the literal value they're defined as. Assigning a value defined as the less-specific string type (e.g. ~const s = 'circle'~) to a unit type (e.g. ~const circle: 'circle' = s~) will result in a type error.
+
+- Unique fields
+#+begin_src typescript
+type Circle = { radius: number };
+type Square = { x: number };
+type Triangle = { x: number; y: number };
+type Shape = Circle | Square | Triangle;
+
+function area(s: Shape) {
+  if ('radius' in s) {
+    return Math.PI * s.radius * s.radius;
+  } else if ('y' in s) {
+    return (s.x * s.y) / 2;
+  } else {
+    return s.x * s.x;
+  }
+}
+console.log(area({radius: 2}));
+#+end_src
+
+*** Type Predicates
+Type predicates introduce a level of re-usability and improved readability (especially when dealing with more complex types).
+#+begin_src typescript
+type Circle = { radius: number };
+type Square = { x: number };
+type Shape = Circle | Square;
+
+function isCircle(s: Shape): s is Circle {
+    return 'radius' in s;
+}
+
+function area(s: Shape) {
+  if (isCircle(s)) {
+    return Math.PI * s.radius * s.radius;
+  } else {
+    return s.x * s.x;
+  }
+}
+console.log(area({x: 2}));
+#+end_src
+
+* Functional Programming in TypeScript (Ramda.js)
+Ramda.js aims to bring functional programming to JavaScript and does so by providing utilities for *point-free programming* (e.g. ~map~, ~reduce~, ~filter~), function composition (e.g. ~pipe~, ~compose~) and general functional programming utilities (e.g. ~curry~, ~memoize~).
+
+Note: Ramda.js also implements functional programming concepts like ~Functor~, allowing us to iterate over objects using ~map~, ~reduce~ and ~filter~ in the same way we iterate over lists/arrays.
+
+One major difference with Elixir is that Ramda.js puts the *operand* as the final function argument.
+
+Elixir:
+#+begin_src elixir
+Enum.map([1, 2, 3], fn x -> x * x end)
+#+end_src
+
+Ramda.js:
+#+begin_src typescript
+R.map(x => x * x, [1, 2, 3]);
+#+end_src
+
+For a full overview of utilities check the [[https://ramdajs.com/docs][Official Documentation]].
+
+** Pipe
+Arguably one of the most used Elixir operators and a [[https://github.com/tc39/proposal-pipeline-operator][highly requested JavaScript feature]], the pipe operator generally improves code readability and conciseness.
+
+#+begin_src
+
+#+end_src
+
+
+* References
+ - [[https://www.typescriptlang.org/][Official TypeScript Website]]
+ - [[https://www.typescriptlang.org/docs/handbook/intro.html][Official TypeScript Handbook]]
+ - [[https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference][JavaScript reference]]
+ - [[https://theprogrammershangout.com/spotlights/what-is-typescript.md][What is TypeScript?]]
