@@ -1,6 +1,6 @@
 FROM node:16-alpine
 
-RUN npm update -g npm
+RUN npm update --location=global npm
 
 COPY package*.json ./
 RUN npm install

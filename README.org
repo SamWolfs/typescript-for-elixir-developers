@@ -3,10 +3,11 @@
 * Installation
 To execute JavaScript code we require a JavaScript runtime; the most popular JavaScript runtime is [[https://nodejs.org/en/][Node.js]], although [[https://deno.land/][Deno]] has been gaining in popularity as a more secure alternative with native Typescript interoperability. Both runtimes use Chrome's V8 engine. We'll be using Node.js as it's the most mature platform.
 
-** Node.js
+** Local
+*** Node.js
 The easiest way to install node is through a version manager, e.g. [[https://asdf-vm.com/][asdf]] or [[https://github.com/coreybutler/nvm-windows][NVM]].
 
-*** asdf (Linux)
+**** asdf (Linux)
 - Follow the [[https://asdf-vm.com/guide/getting-started.html#_3-install-asdf][asdf installation steps]]
 - Install the [[https://github.com/asdf-vm/asdf-nodejs/][asdf node plugin]].
 #+begin_src eshell
@@ -18,20 +19,30 @@ asdf install nodejs lts
 asdf global nodejs lts
 #+end_src
 
-*** NVM (Node Version Manager) for Windows
+**** NVM (Node Version Manager) for Windows
 - Follow the [[https://github.com/coreybutler/nvm-windows][NVM for Windows installation steps]].
+
+*** Dependencies
+Run ~npm install~ in the project root to install project dependencies.
+
+*** Running
+- Run the application: ~npm run start~.
+- Run unit tests: ~npm run test~.
+
+** Docker
+- Build Docker image: ~docker build -t typescript_for_elixir .~
+- Run the application: ~docker run -p 8000:8000 typescript_for_elixir~
+- Run unit tests: ~docker run typescript_for_elixir npm run test~
 
 ** Playgrounds
 - [[https://www.typescriptlang.org/play][TypeScript Playground]]
 - [[https://replit.com][Repl.it]]
 
-** Running the Project (Docker)
+* API Requests
 #+begin_src shell
-docker build -t typescript_for_elixir .
-// run unit tests
-docker run typescript_for_elixir npm run test
-// run app
-docker run -p 8000:8000 typescript_for_elixir
+curl -d '{"kind": "authors", "pattern": "p"}' -H "Content-Type: application/json" -X POST http://localhost:8000
+
+curl -d '{"kind": "movies", "minRuntime": 120}' -H "Content-Type: application/json" -X POST http://localhost:8000
 #+end_src
 
 * JavaScript Fundamentals in TypeScript
