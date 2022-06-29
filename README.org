@@ -571,14 +571,41 @@ R.map(x => x * x, [1, 2, 3]);
 #+end_src
 
 For a full overview of utilities check the [[https://ramdajs.com/docs][Official Documentation]].
+You can run the examples in the [[https://ramdajs.com/repl/?v=0.28.0#][Ramda Playground]].
 
-** Pipe
-Arguably one of the most used Elixir operators and a [[https://github.com/tc39/proposal-pipeline-operator][highly requested JavaScript feature]], the pipe operator generally improves code readability and conciseness.
+** Currying
+Currying is the technique of turning n-arity functions into n unary functions. (~f(x, y, z)~ becomes, ~f(x)(y)(z)~) This allows for partial application of functions to create new functions, which is an especially useful concept when writing code in a functional style.
 
-#+begin_src
-
+Ramda.js functions are curried by default. The above example can be rewritten as follows.
+#+begin_src typescript
+R.map(x => x * x)([1, 2, 3]);
+// or
+const applySquare = R.map(x => x * x);
+applySquare([1, 2, 3]);
 #+end_src
 
+While this may seem overly complicated when looking at simple examples; the ~pipe~ operator should showcase a more useful example of currying.
+
+** Pipe
+Arguably one of the most used Elixir operators and a [[https://github.com/tc39/proposal-pipeline-operator][highly requested JavaScript feature]], the pipe operator generally improves code readability and conciseness. In essence, the ~pipe~ operator provides left-to-right function composition (~compose~ provides right-to-left composition). This proves especially useful when applying a series of operations on an initial value without having to assign to new variables in between steps (e.g. for logging), as we all know how difficult it is to properly name variables.
+
+In Elixir, it's also very common to put ~logging~ statements in between different steps of the pipeline. Ramda also provides functions to transparently pass along values so side-effects like logging can be applied.
+
+#+begin_src typescript
+const log = msg => R.tap(x => console.log(msg, x));
+const mathStuff = R.pipe(
+    log('step 1:'),
+    R.map(x => x * x),
+    log('step 2:'),
+    R.reduce((acc, x) => acc + x, 0),
+    log('step 3:'),
+    R.negate,
+    log('step 4:'),
+    R.inc
+);
+#+end_src
+
+The initial function passed to Ramda's pipe can be n-arity, any subsequent functions in the pipeline have to be unary. This is where the power of currying comes in; as show above, we're able to use ~R.reduce~ (a function with an arity of 3) in the middle of the pipeline, by partially applying until only a single argument is left to be provided.
 
 * References
  - [[https://www.typescriptlang.org/][Official TypeScript Website]]
