@@ -400,6 +400,26 @@ const doConcurrent = async () => {
 executionTimeAsync(doConcurrent);
 #+end_src
 
+Moving from the ~Promise.then~ chain to ~async/await~ is pretty straight forward as it mainly means moving code out of the ~then~ callbacks.
+
+#+begin_src typescript
+new Promise((resolve, _) => resolve([1, 2, 3, 4]))
+    .then((data: number[]) => {
+        const squared = data.map(x => x * x);
+        const sum = squared.reduce((acc, x) => acc + x);
+        console.log('then', sum);
+        return sum;
+    });
+
+(async () => {
+    const data: number[] = await new Promise((resolve, _) => resolve([1, 2, 3, 4]));
+    const squared = data.map(x => x * x);
+    const sum = squared.reduce((acc, x) => acc + x);
+    console.log('await', sum);
+    return sum;
+})()
+#+end_src
+
 Note the similarities to Elixir's [[https://hexdocs.pm/elixir/1.13/Task.html][Task]].
 
 * TypeScript Fundamentals
@@ -592,15 +612,15 @@ Arguably one of the most used Elixir operators and a [[https://github.com/tc39/p
 In Elixir, it's also very common to put ~logging~ statements in between different steps of the pipeline. Ramda also provides functions to transparently pass along values so side-effects like logging can be applied.
 
 #+begin_src typescript
-const log = msg => R.tap(x => console.log(msg, x));
+const inspect = (label: string) => R.tap(x => console.log(label, x));
 const mathStuff = R.pipe(
-    log('step 1:'),
+    inspect('step 1:'),
     R.map(x => x * x),
-    log('step 2:'),
+    inspect('step 2:'),
     R.reduce((acc, x) => acc + x, 0),
-    log('step 3:'),
+    inspect('step 3:'),
     R.negate,
-    log('step 4:'),
+    inspect('step 4:'),
     R.inc
 );
 #+end_src
