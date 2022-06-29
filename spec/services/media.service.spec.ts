@@ -1,4 +1,4 @@
-import { MediaService } from "../../src/services/media.service";
+import { MediaService } from '../../src/services/media.service';
 
 let service: MediaService;
 
