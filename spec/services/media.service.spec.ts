@@ -61,4 +61,15 @@ describe('Beep Boop', () => {
         expect(length).toStrictEqual(expected);
     });
 
+    it('getMovieTitleWithMinRuntime should return all movie titles above provided runtime', async () => {
+        const expected = 'The Lord of the Rings: The Return of the King, The Shawshank Redemption, The Dark Knight, The Godfather';
+        const movies = await service.getMovieTitleWithMinRuntime(120);
+        expect(movies).toStrictEqual(expected);
+    });
+
+    it('getAuthorsOfBooksContaining should return all authors with books containing', async () => {
+        const expected = [{ author: 'Fyodor Dostoevsky' }, { author: 'Jane Austen' }];
+        const authors = await service.getAuthorsOfBooksContaining('p');
+        expect(authors).toStrictEqual(expected);
+    });
 });
