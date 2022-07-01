@@ -2,10 +2,11 @@
   "name": "typescript-for-elixir-developers",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "nodemon --transpile-only src/index.ts",
+    "nodemon": "nodemon --transpile-only src/index.ts",
+    "start": "rm -rf dist && tsc && node dist/index.js",
     "test": "jest"
   },
   "keywords": [],
